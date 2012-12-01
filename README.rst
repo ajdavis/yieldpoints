@@ -5,6 +5,9 @@ YieldPoints
 :Info: Simple extensions to Tornado's gen module.
 :Author: A\. Jesse Jiryu Davis
 
+.. image:: https://travis-ci.org/ajdavis/yieldpoints.png
+        :target: https://travis-ci.org/ajdavis/yieldpoints
+
 About
 =====
 Simple extensions to Tornado's gen_ module.
