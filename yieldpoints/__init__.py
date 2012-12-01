@@ -93,7 +93,7 @@ class CancelAll(YieldPointsBase):
 
 
 class Timeout(YieldPointsBase):
-    """Register a timeout and for which the coroutine can later wait with
+    """Register a timeout for which the coroutine can later wait with
     ``gen.Wait``.
     """
     def __init__(self, deadline, key):
