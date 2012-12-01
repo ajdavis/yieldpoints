@@ -1,6 +1,6 @@
-=======================================================
-yieldpoints: Synchronization primitives for Tornado coroutines
-=======================================================
+==============================================================
+YieldPoints: Synchronization primitives for Tornado coroutines
+==============================================================
 
 .. module:: yieldpoints
 
@@ -10,7 +10,8 @@ Simple extensions to Tornado's gen_ module.
 
 Examples
 ========
-Begin two tasks and handle their results in the order completed:
+Use :class:`~yieldpoints.WaitAny` to begin two tasks and handle their results
+in the order completed:
 
 .. doctest::
 
@@ -54,7 +55,8 @@ Wait with a timeout (the callback is canceled for you if the timeout expires):
     >>> IOLoop.instance().start()
     key: None , result: None
 
-Register a timeout and wait for it later on:
+Use :class:`~yieldpoints.Timeout` to register a timeout and wait for it later
+on:
 
 .. doctest::
 
@@ -72,7 +74,8 @@ Register a timeout and wait for it later on:
     going to wait
     waited, took 0.1 seconds
 
-Begin a task but don't wait for it, while avoiding a ``LeakedCallbackError``:
+If you begin a task but don't wait for it, use :class:`~yieldpoints.Cancel` to
+avoid a ``LeakedCallbackError``:
 
 .. doctest::
 
