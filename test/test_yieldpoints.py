@@ -28,7 +28,7 @@ class TestWaitAny(unittest.TestCase):
 
         history = []
         while keys:
-            key, response = yield yieldpoints.YieldPoints(keys)
+            key, response = yield yieldpoints.WaitAny(keys)
             history.append(key)
             keys.remove(key)
 
@@ -41,7 +41,7 @@ class TestWaitAny(unittest.TestCase):
         def test(callback):
             yield gen.Callback('key') # never called
             start = time.time()
-            key, result = yield yieldpoints.YieldPoints(
+            key, result = yield yieldpoints.WaitAny(
                 ['key'], deadline=timedelta(seconds=0.1))
             duration = time.time() - start
             self.assertEqual(None, key)
@@ -64,7 +64,7 @@ class TestWaitAny(unittest.TestCase):
         def test(callback):
             (yield gen.Callback('key'))('result') # called immediately
             start = time.time()
-            key, result = yield yieldpoints.YieldPoints(
+            key, result = yield yieldpoints.WaitAny(
                 ['key'], deadline=timedelta(seconds=0.1))
             duration = time.time() - start
             self.assertEqual('key', key)
@@ -87,7 +87,7 @@ class TestWaitAny(unittest.TestCase):
             IOLoop.instance().add_timeout(timedelta(seconds=0.1),
                 partial(callback0, 'result'))
             start = time.time()
-            key, result = yield yieldpoints.YieldPoints(
+            key, result = yield yieldpoints.WaitAny(
                 ['key'], deadline=timedelta(seconds=0.2))
             duration = time.time() - start
             self.assertEqual('key', key)
