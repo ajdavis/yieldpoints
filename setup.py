@@ -21,7 +21,7 @@ Programming Language :: Python :: Implementation :: CPython
 Programming Language :: Python :: Implementation :: PyPy
 """
 
-description = 'Synchronization primitives for Tornado coroutines.'
+description = "Simple extensions to Tornado's gen module."
 
 long_description = open("README.rst").read()
 

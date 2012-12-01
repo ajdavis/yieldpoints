@@ -1,6 +1,6 @@
-==============================================================
-YieldPoints: Synchronization primitives for Tornado coroutines
-==============================================================
+=======================================================
+YieldPoints: Simple extensions to Tornado's gen module.
+=======================================================
 
 .. module:: yieldpoints
 
