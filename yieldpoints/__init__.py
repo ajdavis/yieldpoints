@@ -13,6 +13,7 @@ version = '.'.join(map(str, version_tuple))
 
 __all__ = ['YieldPoints', 'Cancel', 'CancelAll', 'Timeout']
 
+
 class YieldPointsBase(gen.YieldPoint):
     def cancel(self, runner, key):
         try:
@@ -22,6 +23,11 @@ class YieldPointsBase(gen.YieldPoint):
 
 
 class WaitAny(YieldPointsBase):
+    """Wait for several keys, and continue when the first of them is complete.
+
+    Inspired by Ben Darnell in `a conversation on the Tornado mailing list
+    <https://groups.google.com/d/msg/python-tornado/PCHidled01M/B7sDjNP2OpQJ>`.
+    """
     def __init__(self, keys, deadline=None):
         self.keys = keys
         self.deadline = deadline
@@ -56,6 +62,8 @@ class WaitAny(YieldPointsBase):
 
 
 class Cancel(YieldPointsBase):
+    """Cancel a key so ``gen.engine`` doesn't raise a LeakedCallbackError
+    """
     def __init__(self, key):
         self.key = key
 
@@ -70,6 +78,8 @@ class Cancel(YieldPointsBase):
 
 
 class CancelAll(YieldPointsBase):
+    """Cancel all keys for which the current coroutine has registered callbacks
+    """
     def start(self, runner):
         # Copy the set, since self.cancel() shrinks it during iteration
         for key in runner.pending_callbacks.copy():
@@ -83,6 +93,9 @@ class CancelAll(YieldPointsBase):
 
 
 class Timeout(YieldPointsBase):
+    """Register a timeout and for which the coroutine can later wait with
+    ``gen.Wait``.
+    """
     def __init__(self, deadline, key):
         self.deadline = deadline
         self.key = key
