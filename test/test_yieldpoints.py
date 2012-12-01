@@ -39,6 +39,26 @@ class TestWaitAny(unittest.TestCase):
         done()
 
     @async_test_engine()
+    def test_get_result(self, done):
+        # Test that WaitAny.get_result raises an exception if no results are
+        # ready - this isn't a case that should ever arise, since gen.engine
+        # checks is_ready() before calling get_result(), but let's make sure
+        # it works anyway
+        gen_callback = gen.Callback('key')
+        callback = yield gen_callback
+        runner = gen_callback.runner
+
+        wait_any = yieldpoints.WaitAny(['key'])
+        wait_any.start(runner)
+        self.assertFalse(wait_any.is_ready())
+        self.assertRaises(Exception, wait_any.get_result)
+
+        callback('result')
+        self.assertTrue(wait_any.is_ready())
+        self.assertEqual(('key', 'result'), wait_any.get_result())
+        done()
+
+    @async_test_engine()
     def test_timeout(self, done):
         @gen.engine
         def test(callback):
@@ -119,7 +139,7 @@ class TestTimeout(unittest.TestCase):
 
 class TestCancel(unittest.TestCase):
     @async_test_engine()
-    def test_timeout(self, done):
+    def test_cancel(self, done):
         @gen.engine
         def test(callback):
             yield gen.Callback('key') # never called
@@ -132,6 +152,21 @@ class TestCancel(unittest.TestCase):
             self.fail("LeakedCallbackError was unexpectedly raised")
         else:
             done()
+
+    @async_test_engine()
+    def test_cancel_unknown_key(self, done):
+        @gen.engine
+        def test(callback):
+            yield yieldpoints.Cancel('key')
+            callback()
+
+        try:
+            yield gen.Task(test)
+        except gen.UnknownKeyError:
+            # Success
+            done()
+        else:
+            self.fail("UnknownKeyError not raised")
 
 
 class TestCancelAll(unittest.TestCase):
