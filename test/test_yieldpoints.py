@@ -20,7 +20,10 @@ class TestWaitAny(unittest.TestCase):
     @async_test_engine()
     def test_basic(self, done):
         keys = list(range(3))
-        callbacks = [(yield gen.Callback(key)) for key in keys]
+        callbacks = []
+        for key in keys:
+            callbacks.append((yield gen.Callback(key)))
+
         loop = IOLoop.instance()
         loop.add_timeout(timedelta(seconds=0.01), callbacks[1])
         loop.add_timeout(timedelta(seconds=0.02), callbacks[0])
