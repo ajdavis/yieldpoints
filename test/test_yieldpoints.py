@@ -82,6 +82,17 @@ class TestWaitAny(unittest.TestCase):
             done()
 
     @async_test_engine()
+    def test_callback_after_cancel(self, done):
+        # Check that a canceled callback can still be run without error
+        key_callback = yield gen.Callback('key')
+        key, result = yield yieldpoints.WaitAny(
+            ['key'], deadline=timedelta(seconds=0.01))
+        self.assertEqual(None, key)
+        self.assertEqual(None, result)
+        key_callback()
+        done()
+
+    @async_test_engine()
     def test_timeout_cancel(self, done):
         @gen.engine
         def test(callback):
@@ -167,6 +178,14 @@ class TestCancel(unittest.TestCase):
             done()
         else:
             self.fail("UnknownKeyError not raised")
+
+    @async_test_engine()
+    def test_callback_after_cancel(self, done):
+        # Check that a canceled callback can still be run without error
+        key_callback = yield gen.Callback('key')
+        yield yieldpoints.Cancel('key')
+        key_callback()
+        done()
 
 
 class TestCancelAll(unittest.TestCase):
