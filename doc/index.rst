@@ -10,7 +10,6 @@ Simple extensions to Tornado's gen_ module.
 
 Examples
 ========
-
 Begin two tasks and handle their results in the order completed:
 
 .. doctest::
