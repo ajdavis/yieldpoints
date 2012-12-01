@@ -39,6 +39,22 @@ Begin two tasks and handle their results in the order completed:
     key: 1 , result: foo
     key: 0 , result: bar
 
+Wait with a timeout (the callback is canceled for you if the timeout expires):
+
+.. doctest::
+
+    >>> @gen.engine
+    ... def f():
+    ...     callback = yield gen.Callback('key') # never called
+    ...     key, result = yield yieldpoints.WaitAny(
+    ...         ['key'], deadline=timedelta(seconds=0.1))
+    ...     print 'key:', key, ', result:', result
+    ...     IOLoop.instance().stop()
+    ...
+    >>> f()
+    >>> IOLoop.instance().start()
+    key: None , result: None
+
 Register a timeout and wait for it later on:
 
 .. doctest::
@@ -57,8 +73,7 @@ Register a timeout and wait for it later on:
     going to wait
     waited, took 0.1 seconds
 
-Begin a task and decline not to wait for it, while avoiding a
-``LeakedCallbackError``:
+Begin a task but don't wait for it, while avoiding a ``LeakedCallbackError``:
 
 .. doctest::
 
