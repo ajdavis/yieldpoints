@@ -2,7 +2,7 @@
 YieldPoints
 ===========
 
-:Info: Synchronization primitives for Tornado coroutines.
+:Info: Simple extensions to Tornado's gen module.
 :Author: A\. Jesse Jiryu Davis
 
 About
