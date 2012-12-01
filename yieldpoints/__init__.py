@@ -26,7 +26,7 @@ class WaitAny(YieldPointsBase):
     """Wait for several keys, and continue when the first of them is complete.
 
     Inspired by Ben Darnell in `a conversation on the Tornado mailing list
-    <https://groups.google.com/d/msg/python-tornado/PCHidled01M/B7sDjNP2OpQJ>`.
+    <https://groups.google.com/d/msg/python-tornado/PCHidled01M/B7sDjNP2OpQJ>`_.
     """
     def __init__(self, keys, deadline=None):
         self.keys = keys
