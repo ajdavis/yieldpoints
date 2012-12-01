@@ -4,6 +4,9 @@ YieldPoints: Simple extensions to Tornado's gen module.
 
 .. module:: yieldpoints
 
+.. image:: _static/yield.png
+    :align: center
+
 Simple extensions to Tornado's gen_ module.
 
 .. _gen: http://www.tornadoweb.org/documentation/gen.html
