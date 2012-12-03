@@ -28,18 +28,17 @@ class WaitAny(YieldPointsBase):
     Inspired by Ben Darnell in `a conversation on the Tornado mailing list
     <https://groups.google.com/d/msg/python-tornado/PCHidled01M/B7sDjNP2OpQJ>`_.
     """
-    def __init__(self, keys, deadline=None):
+    def __init__(self, keys, deadline=None, io_loop=None):
         self.keys = keys
         self.deadline = deadline
         self.expired = False
         self.timeout = None
+        self.io_loop = io_loop or IOLoop.instance()
 
     def start(self, runner):
         self.runner = runner
-        # TODO: configurable loop?
         if self.deadline is not None:
-            self.timeout = IOLoop.instance().add_timeout(
-                self.deadline, self.expire)
+            self.timeout = self.io_loop.add_timeout(self.deadline, self.expire)
 
     def is_ready(self):
         return self.expired or any(
@@ -96,17 +95,15 @@ class Timeout(YieldPointsBase):
     """Register a timeout for which the coroutine can later wait with
     ``gen.Wait``.
     """
-    def __init__(self, deadline, key):
+    def __init__(self, deadline, key, io_loop=None):
         self.deadline = deadline
         self.key = key
+        self.io_loop = io_loop or IOLoop.instance()
 
     def start(self, runner):
         self.runner = runner
         runner.register_callback(self.key)
-        # TODO: configurable loop?
-        IOLoop.instance().add_timeout(
-            self.deadline,
-            partial(self.expire))
+        self.io_loop.add_timeout(self.deadline, partial(self.expire))
 
     def expire(self):
         self.runner.set_result(self.key, None)
