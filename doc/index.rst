@@ -56,7 +56,8 @@ or to :class:`~yieldpoints.CancelAll` avoid a ``LeakedCallbackError``:
     >>> f()
     >>> IOLoop.instance().start()
 
-Wait with a timeout:
+Wait with a timeout. :class:`~yieldpoints.WithTimeout` can take a
+``YieldPoint`` or a key name as its second argument:
 
 .. doctest::
 
