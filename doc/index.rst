@@ -42,7 +42,21 @@ in the order completed:
     key: 1 , result: foo
     key: 0 , result: bar
 
-Wait with a timeout (the callback is canceled for you if the timeout expires):
+If you begin a task but don't wait for it, use :class:`~yieldpoints.Cancel`
+or to :class:`~yieldpoints.CancelAll` avoid a ``LeakedCallbackError``:
+
+.. doctest::
+
+    >>> @gen.engine
+    ... def f():
+    ...     yield gen.Callback('key') # never called
+    ...     yield yieldpoints.Cancel('key')
+    ...     IOLoop.instance().stop()
+    ...
+    >>> f()
+    >>> IOLoop.instance().start()
+
+Wait with a timeout:
 
 .. doctest::
 
@@ -50,8 +64,8 @@ Wait with a timeout (the callback is canceled for you if the timeout expires):
     ... def f():
     ...     callback = yield gen.Callback('key') # never called
     ...     try:
-    ...         key, result = yield yieldpoints.WaitAny(
-    ...             ['key'], deadline=timedelta(seconds=0.1))
+    ...         key, result = yield yieldpoints.WithTimeout(
+    ...             timedelta(seconds=0.1), 'key')
     ...     except yieldpoints.TimeoutException:
     ...         print 'Timeout!'
     ...         IOLoop.instance().stop()
@@ -78,20 +92,6 @@ on:
     >>> IOLoop.instance().start()
     going to wait
     waited, took 0.1 seconds
-
-If you begin a task but don't wait for it, use :class:`~yieldpoints.Cancel` to
-avoid a ``LeakedCallbackError``:
-
-.. doctest::
-
-    >>> @gen.engine
-    ... def f():
-    ...     yield gen.Callback('key') # never called
-    ...     yield yieldpoints.Cancel('key')
-    ...     IOLoop.instance().stop()
-    ...
-    >>> f()
-    >>> IOLoop.instance().start()
 
 Contents
 ========

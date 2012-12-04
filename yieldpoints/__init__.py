@@ -11,7 +11,10 @@ version = '.'.join(map(str, version_tuple))
 """Current version of YieldPoints."""
 
 
-__all__ = ['YieldPoints', 'Cancel', 'CancelAll', 'Timeout']
+__all__ = [
+    'TimeoutException', 'WaitAny', 'WithTimeout', 'Timeout', 'Cancel',
+    'CancelAll'
+]
 
 
 def cancel(runner, key):
@@ -31,35 +34,57 @@ class WaitAny(gen.YieldPoint):
     Inspired by Ben Darnell in `a conversation on the Tornado mailing list
     <https://groups.google.com/d/msg/python-tornado/PCHidled01M/B7sDjNP2OpQJ>`_.
     """
-    def __init__(self, keys, deadline=None, io_loop=None):
+    def __init__(self, keys):
         self.keys = keys
+
+    def start(self, runner):
+        self.runner = runner
+
+    def is_ready(self):
+        return any(self.runner.is_ready(key) for key in self.keys)
+
+    def get_result(self):
+        for key in self.keys:
+            if self.runner.is_ready(key):
+                return key, self.runner.pop_result(key)
+        raise Exception("no results found")
+
+
+class WithTimeout(gen.YieldPoint):
+    """Wait for a YieldPoint or a timeout, whichever comes first.
+
+    :Parameters:
+      - `deadline`: A timestamp or timedelta
+      - `yield_point`: A ``gen.YieldPoint`` or a key
+      - `io_loop`: Optional custom ``IOLoop`` on which to run timeout
+    """
+    def __init__(self, deadline, yield_point, io_loop=None):
         self.deadline = deadline
+        if isinstance(yield_point, gen.YieldPoint):
+            self.yield_point = yield_point
+        else:
+            # yield_point is actually a key, e.g. gen.Callback('key')
+            self.yield_point = gen.Wait(yield_point)
         self.expired = False
         self.timeout = None
         self.io_loop = io_loop or IOLoop.instance()
 
     def start(self, runner):
         self.runner = runner
-        if self.deadline is not None:
-            self.timeout = self.io_loop.add_timeout(self.deadline, self.expire)
+        self.timeout = self.io_loop.add_timeout(self.deadline, self.expire)
+        self.yield_point.start(runner)
 
     def is_ready(self):
-        return self.expired or any(
-            self.runner.is_ready(key) for key in self.keys)
+        return self.expired or self.yield_point.is_ready()
 
     def get_result(self):
         if self.expired:
             raise TimeoutException()
 
-        for key in self.keys:
-            if self.runner.is_ready(key):
-                return key, self.runner.pop_result(key)
-        raise Exception("no results found")
+        return self.yield_point.get_result()
 
     def expire(self):
         self.expired = True
-        for key in self.keys:
-            cancel(self.runner, key)
         self.runner.run()
 
 

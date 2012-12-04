@@ -11,6 +11,16 @@ WaitAny
 .. autoclass:: WaitAny
   :members:
 
+WithTimeout
+-------
+.. autoclass:: WithTimeout
+  :members:
+
+Timeout
+-------
+.. autoclass:: Timeout
+  :members:
+
 Cancel
 ------
 .. autoclass:: Cancel
@@ -21,7 +31,6 @@ CancelAll
 .. autoclass:: CancelAll
   :members:
 
-Timeout
--------
-.. autoclass:: Timeout
-  :members:
+TimeoutException
+----------------
+.. autoclass:: TimeoutException
