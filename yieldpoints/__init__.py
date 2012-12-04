@@ -21,11 +21,7 @@ def cancel(runner, key):
         raise UnknownKeyError("key %r is not pending" % key)
 
 
-class YieldPointsBase(gen.YieldPoint):
-    pass
-
-
-class WaitAny(YieldPointsBase):
+class WaitAny(gen.YieldPoint):
     """Wait for several keys, and continue when the first of them is complete.
 
     Inspired by Ben Darnell in `a conversation on the Tornado mailing list
@@ -63,7 +59,7 @@ class WaitAny(YieldPointsBase):
         self.runner.run()
 
 
-class Timeout(YieldPointsBase):
+class Timeout(gen.YieldPoint):
     """Register a timeout for which the coroutine can later wait with
     ``gen.Wait``.
     """
@@ -89,7 +85,7 @@ class Timeout(YieldPointsBase):
         return None
 
 
-class Cancel(YieldPointsBase):
+class Cancel(gen.YieldPoint):
     """Cancel a key so ``gen.engine`` doesn't raise a LeakedCallbackError
     """
     def __init__(self, key):
@@ -105,7 +101,7 @@ class Cancel(YieldPointsBase):
         return None
 
 
-class CancelAll(YieldPointsBase):
+class CancelAll(gen.YieldPoint):
     """Cancel all keys for which the current coroutine has registered callbacks
     """
     def start(self, runner):
