@@ -21,6 +21,10 @@ def cancel(runner, key):
         raise UnknownKeyError("key %r is not pending" % key)
 
 
+class TimeoutException(Exception):
+    pass
+
+
 class WaitAny(gen.YieldPoint):
     """Wait for several keys, and continue when the first of them is complete.
 
@@ -45,7 +49,7 @@ class WaitAny(gen.YieldPoint):
 
     def get_result(self):
         if self.expired:
-            return None, None
+            raise TimeoutException()
 
         for key in self.keys:
             if self.runner.is_ready(key):

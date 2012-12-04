@@ -49,14 +49,16 @@ Wait with a timeout (the callback is canceled for you if the timeout expires):
     >>> @gen.engine
     ... def f():
     ...     callback = yield gen.Callback('key') # never called
-    ...     key, result = yield yieldpoints.WaitAny(
-    ...         ['key'], deadline=timedelta(seconds=0.1))
-    ...     print 'key:', key, ', result:', result
-    ...     IOLoop.instance().stop()
+    ...     try:
+    ...         key, result = yield yieldpoints.WaitAny(
+    ...             ['key'], deadline=timedelta(seconds=0.1))
+    ...     except yieldpoints.TimeoutException:
+    ...         print 'Timeout!'
+    ...         IOLoop.instance().stop()
     ...
     >>> f()
     >>> IOLoop.instance().start()
-    key: None , result: None
+    Timeout!
 
 Use :class:`~yieldpoints.Timeout` to register a timeout and wait for it later
 on:

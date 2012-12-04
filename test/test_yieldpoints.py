@@ -64,11 +64,17 @@ class TestWaitAny(unittest.TestCase):
         def test(callback):
             yield gen.Callback('key') # never called
             start = time.time()
-            key, result = yield yieldpoints.WaitAny(
-                ['key'], deadline=timedelta(seconds=0.1))
+
+            try:
+                yield yieldpoints.WaitAny(
+                    ['key'], deadline=timedelta(seconds=0.1))
+            except yieldpoints.TimeoutException:
+                # Expected
+                pass
+            else:
+                self.fail("No TimeoutException raised")
+
             duration = time.time() - start
-            self.assertEqual(None, key)
-            self.assertEqual(None, result)
             # assertAlmostEquals with 'delta' not available until Python 2.7
             self.assertTrue(abs(duration - 0.1) < 0.01)
             callback()
@@ -85,10 +91,15 @@ class TestWaitAny(unittest.TestCase):
     def test_callback_after_cancel(self, done):
         # Check that a canceled callback can still be run without error
         key_callback = yield gen.Callback('key')
-        key, result = yield yieldpoints.WaitAny(
-            ['key'], deadline=timedelta(seconds=0.01))
-        self.assertEqual(None, key)
-        self.assertEqual(None, result)
+
+        try:
+            yield yieldpoints.WaitAny(
+                ['key'], deadline=timedelta(seconds=0.1))
+        except yieldpoints.TimeoutException:
+            pass
+        else:
+            self.fail("No TimeoutException raised")
+
         key_callback()
         done()
 
@@ -144,9 +155,17 @@ class TestWaitAny(unittest.TestCase):
         @gen.engine
         def test():
             yield gen.Callback('key')
-            # This schedules a timeout on the custom loop
-            yield yieldpoints.WaitAny(
-                ['key'], timedelta(seconds=0.01), io_loop=custom_loop)
+
+            try:
+                # This schedules a timeout on the custom loop
+                yield yieldpoints.WaitAny(
+                    ['key'], timedelta(seconds=0.01), io_loop=custom_loop)
+            except yieldpoints.TimeoutException:
+                # Expected
+                pass
+            else:
+                self.fail("No TimeoutException raised")
+
             custom_loop.stop()
 
         test()
