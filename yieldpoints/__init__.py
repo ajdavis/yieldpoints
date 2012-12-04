@@ -14,12 +14,15 @@ version = '.'.join(map(str, version_tuple))
 __all__ = ['YieldPoints', 'Cancel', 'CancelAll', 'Timeout']
 
 
+def cancel(runner, key):
+    try:
+        runner.pending_callbacks.remove(key)
+    except KeyError:
+        raise UnknownKeyError("key %r is not pending" % key)
+
+
 class YieldPointsBase(gen.YieldPoint):
-    def cancel(self, runner, key):
-        try:
-            runner.pending_callbacks.remove(key)
-        except KeyError:
-            raise UnknownKeyError("key %r is not pending" % key)
+    pass
 
 
 class WaitAny(YieldPointsBase):
@@ -56,7 +59,7 @@ class WaitAny(YieldPointsBase):
     def expire(self):
         self.expired = True
         for key in self.keys:
-            self.cancel(self.runner, key)
+            cancel(self.runner, key)
         self.runner.run()
 
 
@@ -93,7 +96,7 @@ class Cancel(YieldPointsBase):
         self.key = key
 
     def start(self, runner):
-        self.cancel(runner, self.key)
+        cancel(runner, self.key)
 
     def is_ready(self):
         return True
@@ -106,9 +109,9 @@ class CancelAll(YieldPointsBase):
     """Cancel all keys for which the current coroutine has registered callbacks
     """
     def start(self, runner):
-        # Copy the set, since self.cancel() shrinks it during iteration
+        # Copy the set, since cancel() shrinks it during iteration
         for key in runner.pending_callbacks.copy():
-            self.cancel(runner, key)
+            cancel(runner, key)
 
     def is_ready(self):
         return True
