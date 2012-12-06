@@ -80,7 +80,6 @@ Contents
 .. toctree::
     examples/index
     classes
-    faq
     changelog
 
 Source
