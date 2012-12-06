@@ -86,6 +86,10 @@ Source
 ======
 Is on GitHub: https://github.com/ajdavis/yieldpoints
 
+Bug Reports and Feature Requests
+================================
+Also on GitHub: https://github.com/ajdavis/yieldpoints/issues
+
 Indices and tables
 ==================
 
