@@ -1,6 +1,7 @@
-Examples
-========
+Extended YieldPoints example
+============================
 
-.. todo:: some examples?
+.. automodule:: examples.example
 
-.. toctree::
+.. literalinclude:: ../../examples/example.py
+    :start-after: # start-file
