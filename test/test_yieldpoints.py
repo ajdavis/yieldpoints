@@ -193,34 +193,6 @@ class TestWithTimeout(unittest.TestCase):
         custom_loop.start()
 
 
-class TestTimeout(unittest.TestCase):
-    @async_test_engine()
-    def test_timeout(self, done):
-        yield yieldpoints.Timeout(timedelta(seconds=0.1), 'key')
-        start = time.time()
-        result = yield gen.Wait('key')
-        duration = time.time() - start
-        self.assertEqual(None, result)
-        self.assertTrue(abs(duration - 0.1) < 0.01)
-        done()
-
-    def test_io_loop(self):
-        global_loop = IOLoop.instance()
-        custom_loop = IOLoop()
-        self.assertNotEqual(global_loop, custom_loop)
-
-        @gen.engine
-        def test():
-            # This schedules a timeout on the custom loop
-            yield yieldpoints.Timeout(
-                timedelta(seconds=0.01), 'key', io_loop=custom_loop)
-            yield gen.Wait('key')
-            custom_loop.stop()
-
-        test()
-        custom_loop.start()
-
-
 class TestCancel(unittest.TestCase):
     @async_test_engine()
     def test_cancel(self, done):

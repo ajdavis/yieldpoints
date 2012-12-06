@@ -75,25 +75,6 @@ Wait with a timeout. :class:`~yieldpoints.WithTimeout` can take a
     >>> IOLoop.instance().start()
     Timeout!
 
-Use :class:`~yieldpoints.Timeout` to register a timeout and wait for it later
-on:
-
-.. doctest::
-
-    >>> @gen.engine
-    ... def f():
-    ...     start = time.time()
-    ...     yield yieldpoints.Timeout(timedelta(seconds=0.1), 'key')
-    ...     print 'going to wait'
-    ...     yield gen.Wait('key')
-    ...     print 'waited, took %.1f seconds' % (time.time() - start)
-    ...     IOLoop.instance().stop()
-    ...
-    >>> f()
-    >>> IOLoop.instance().start()
-    going to wait
-    waited, took 0.1 seconds
-
 Contents
 ========
 .. toctree::

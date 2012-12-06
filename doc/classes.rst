@@ -16,11 +16,6 @@ WithTimeout
 .. autoclass:: WithTimeout
   :members:
 
-Timeout
--------
-.. autoclass:: Timeout
-  :members:
-
 Cancel
 ------
 .. autoclass:: Cancel

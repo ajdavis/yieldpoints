@@ -88,32 +88,6 @@ class WithTimeout(gen.YieldPoint):
         self.runner.run()
 
 
-class Timeout(gen.YieldPoint):
-    """Register a timeout for which the coroutine can later wait with
-    ``gen.Wait``.
-    """
-    def __init__(self, deadline, key, io_loop=None):
-        self.deadline = deadline
-        self.key = key
-        self.io_loop = io_loop or IOLoop.instance()
-
-    def start(self, runner):
-        self.runner = runner
-        runner.register_callback(self.key)
-        self.io_loop.add_timeout(self.deadline, partial(self.expire))
-
-    def expire(self):
-        self.runner.set_result(self.key, None)
-        self.runner.run()
-
-    def is_ready(self):
-        # Like gen.Callback: is_ready() returns True so coroutine can proceed
-        return True
-
-    def get_result(self):
-        return None
-
-
 class Cancel(gen.YieldPoint):
     """Cancel a key so ``gen.engine`` doesn't raise a LeakedCallbackError
     """
