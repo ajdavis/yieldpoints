@@ -20,7 +20,6 @@ Tornado_ >= version 2.3.
 
 .. _Tornado: http://www.tornadoweb.org/
 
-
 Documentation
 =============
 
