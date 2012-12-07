@@ -36,7 +36,7 @@ if "nosetests" in sys.argv:
     packages.append('test')
 
 setup(name='yieldpoints',
-      version='0.1',
+      version='0.1+',
       packages=packages,
       description=description,
       long_description=long_description,

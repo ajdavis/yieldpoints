@@ -5,7 +5,7 @@ from tornado.gen import UnknownKeyError
 from tornado.ioloop import IOLoop
 
 
-version_tuple = (0, 1)
+version_tuple = (0, 1, '+')
 
 version = '.'.join(map(str, version_tuple))
 """Current version of YieldPoints."""
