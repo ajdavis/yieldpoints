@@ -46,7 +46,7 @@ setup(name='yieldpoints',
       install_requires=['tornado >= 2.4.0'],
       license='http://www.apache.org/licenses/LICENSE-2.0',
       classifiers=filter(None, classifiers.split('\n')),
-      keywords='tornado coroutines semaphore mutex queue asynchronous',
+      keywords='tornado yieldpoint yieldpoints gen coroutine generator',
       # use python setup.py nosetests to test
       setup_requires=['nose'],
       **kwargs
