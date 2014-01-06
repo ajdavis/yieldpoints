@@ -18,16 +18,16 @@ in the order completed:
 
 .. doctest::
 
-    >>> @gen.engine
+    >>> @gen.coroutine
     ... def f():
     ...     callback0 = yield gen.Callback(0)
     ...     callback1 = yield gen.Callback(1)
     ...
     ...     # Fire callback1 soon, callback0 later
-    ...     IOLoop.instance().add_timeout(
+    ...     IOLoop.current().add_timeout(
     ...         timedelta(seconds=0.1), partial(callback1, 'foo'))
     ...
-    ...     IOLoop.instance().add_timeout(
+    ...     IOLoop.current().add_timeout(
     ...         timedelta(seconds=0.2), partial(callback0, 'bar'))
     ...
     ...     keys = set([0, 1])
@@ -35,10 +35,8 @@ in the order completed:
     ...         key, result = yield yieldpoints.WaitAny(keys)
     ...         print 'key:', key, ', result:', result
     ...         keys.remove(key)
-    ...     IOLoop.instance().stop()
     ...
-    >>> f()
-    >>> IOLoop.instance().start()
+    >>> IOLoop.current().run_sync(f)
     key: 1 , result: foo
     key: 0 , result: bar
 
@@ -47,21 +45,19 @@ or to :class:`~yieldpoints.CancelAll` avoid a ``LeakedCallbackError``:
 
 .. doctest::
 
-    >>> @gen.engine
+    >>> @gen.coroutine
     ... def f():
     ...     yield gen.Callback('key') # never called
     ...     yield yieldpoints.Cancel('key')
-    ...     IOLoop.instance().stop()
     ...
-    >>> f()
-    >>> IOLoop.instance().start()
+    >>> IOLoop.current().run_sync(f)
 
 Wait with a timeout. :class:`~yieldpoints.WithTimeout` can take a
 ``YieldPoint`` or a key name as its second argument:
 
 .. doctest::
 
-    >>> @gen.engine
+    >>> @gen.coroutine
     ... def f():
     ...     callback = yield gen.Callback('key') # never called
     ...     try:
@@ -69,10 +65,8 @@ Wait with a timeout. :class:`~yieldpoints.WithTimeout` can take a
     ...             timedelta(seconds=0.1), 'key')
     ...     except yieldpoints.TimeoutException:
     ...         print 'Timeout!'
-    ...         IOLoop.instance().stop()
     ...
-    >>> f()
-    >>> IOLoop.instance().start()
+    >>> IOLoop.current().run_sync(f)
     Timeout!
 
 Contents

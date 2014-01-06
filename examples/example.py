@@ -15,8 +15,7 @@ class PageRaceHandler(web.RequestHandler):
     """A 'page race': start downloading many pages at once, and see how long
     each takes.
     """
-    @web.asynchronous
-    @gen.engine
+    @gen.coroutine
     def get(self):
         urls = set([
             'http://google.com', 'http://apple.com', 'http://microsoft.com',
@@ -52,9 +51,7 @@ class PageRaceHandler(web.RequestHandler):
 
                 # Avoid LeakedCallbackError
                 yield yieldpoints.CancelAll()
-
-                # Quit this coroutine
-                raise StopIteration
+                return
 
             pending_urls.remove(url)
             self.write("""
@@ -77,4 +74,4 @@ class PageRaceHandler(web.RequestHandler):
 if __name__ == '__main__':
     print 'Listening on http://localhost:8888'
     web.Application([('.*', PageRaceHandler)], debug=True).listen(8888)
-    ioloop.IOLoop.instance().start()
+    ioloop.IOLoop.current().start()
