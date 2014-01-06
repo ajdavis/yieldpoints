@@ -16,7 +16,7 @@ Simple extensions to Tornado's gen_ module.
 
 Dependencies
 ============
-Tornado_ >= version 2.3.
+Tornado_ >= version 3.1.
 
 .. _Tornado: http://www.tornadoweb.org/
 
