@@ -7,24 +7,22 @@ from __future__ import with_statement
 from datetime import timedelta
 from functools import partial
 import time
-import unittest
 
 from tornado import gen
-from tornado.ioloop import IOLoop
+from tornado.testing import AsyncTestCase, gen_test
 
 import yieldpoints
-from test.async_test_engine import async_test_engine
 
 
-class TestWaitAny(unittest.TestCase):
-    @async_test_engine()
-    def test_basic(self, done):
+class TestWaitAny(AsyncTestCase):
+    @gen_test
+    def test_basic(self):
         keys = list(range(3))
         callbacks = []
         for key in keys:
             callbacks.append((yield gen.Callback(key)))
 
-        loop = IOLoop.instance()
+        loop = self.io_loop
         loop.add_timeout(timedelta(seconds=0.01), callbacks[1])
         loop.add_timeout(timedelta(seconds=0.02), callbacks[0])
         loop.add_timeout(timedelta(seconds=0.03), callbacks[2])
@@ -36,10 +34,9 @@ class TestWaitAny(unittest.TestCase):
             keys.remove(key)
 
         self.assertEqual([1, 0, 2], history)
-        done()
 
-    @async_test_engine()
-    def test_get_result(self, done):
+    @gen_test
+    def test_get_result(self):
         # Test that WaitAny.get_result raises an exception if no results are
         # ready - this isn't a case that should ever arise, since gen.engine
         # checks is_ready() before calling get_result(), but let's make sure
@@ -56,19 +53,18 @@ class TestWaitAny(unittest.TestCase):
         callback('result')
         self.assertTrue(wait_any.is_ready())
         self.assertEqual(('key', 'result'), wait_any.get_result())
-        done()
 
 
 # Tests for the WithTimeout class
-class TestWithTimeout(unittest.TestCase):
-    @async_test_engine()
-    def test_timeout(self, done):
+class TestWithTimeout(AsyncTestCase):
+    @gen_test
+    def test_timeout(self):
         yield gen.Callback('key')
         start = time.time()
 
         try:
             yield yieldpoints.WithTimeout(
-                timedelta(seconds=0.1), 'key')
+                timedelta(seconds=0.1), 'key', self.io_loop)
         except yieldpoints.TimeoutException:
             # Expected
             pass
@@ -79,16 +75,15 @@ class TestWithTimeout(unittest.TestCase):
         # assertAlmostEquals with 'delta' not available until Python 2.7
         self.assertTrue(abs(duration - 0.1) < 0.01)
         yield yieldpoints.Cancel('key') # avoid LeakedCallbackError
-        done()
 
-    @async_test_engine()
-    def test_callback_after_timeout(self, done):
+    @gen_test
+    def test_callback_after_timeout(self):
         # Check that a canceled callback can still be run without error
         callback = yield gen.Callback('key')
 
         try:
             yield yieldpoints.WithTimeout(
-                timedelta(seconds=0.1), 'key')
+                timedelta(seconds=0.1), 'key', self.io_loop)
         except yieldpoints.TimeoutException:
             # Expected
             pass
@@ -96,46 +91,45 @@ class TestWithTimeout(unittest.TestCase):
             self.fail("No TimeoutException raised")
 
         callback() # No error
-        done()
 
-    @async_test_engine()
-    def test_timeout_cancel(self, done):
+    @gen_test
+    def test_timeout_cancel(self):
         (yield gen.Callback('key'))('result') # called immediately
 
         try:
             result = yield yieldpoints.WithTimeout(
-                timedelta(seconds=0.1), 'key')
+                timedelta(seconds=0.1), 'key', self.io_loop)
         except yieldpoints.TimeoutException:
             self.fail("TimeoutException unexpectedly raised")
 
         self.assertEqual('result', result)
-        done()
 
-    @async_test_engine()
-    def test_timeout_cancel_with_delay(self, done):
+    @gen_test
+    def test_timeout_cancel_with_delay(self):
         callback = yield gen.Callback('key')
         start = time.time()
-        IOLoop.instance().add_timeout(
+        self.io_loop.add_timeout(
             timedelta(seconds=0.1), partial(callback, 'result'))
 
         try:
             result = yield yieldpoints.WithTimeout(
-                timedelta(seconds=0.2), 'key')
+                timedelta(seconds=0.2), 'key', self.io_loop)
         except yieldpoints.TimeoutException:
             self.fail("TimeoutException unexpectedly raised")
 
         duration = time.time() - start
         self.assertTrue(abs(duration - 0.1) < 0.01)
         self.assertEqual('result', result)
-        done()
 
-    @async_test_engine()
-    def test_timeout_and_wait_any(self, done):
+    @gen_test
+    def test_timeout_and_wait_any(self):
         # Make sure WithTimeout and WaitAny are composable
         yield gen.Callback('key')
         try:
             yield yieldpoints.WithTimeout(
-                timedelta(seconds=0.01), yieldpoints.WaitAny(['key']))
+                timedelta(seconds=0.01),
+                yieldpoints.WaitAny(['key']),
+                self.io_loop)
         except yieldpoints.TimeoutException:
             # Expected
             pass
@@ -143,59 +137,33 @@ class TestWithTimeout(unittest.TestCase):
             self.fail("No TimeoutException raised")
 
         yield yieldpoints.Cancel('key')
-        done()
 
-    @async_test_engine()
-    def test_timeout_and_task(self, done):
+    @gen_test
+    def test_timeout_and_task(self):
         # Make sure WithTimeout and gen.Task are composable
         try:
             yield yieldpoints.WithTimeout(
-                timedelta(seconds=0.01), gen.Task(
-                    IOLoop.instance().add_callback))
+                timedelta(seconds=0.01),
+                gen.Task(self.io_loop.add_callback),
+                self.io_loop)
         except yieldpoints.TimeoutException:
             self.fail("TimeoutException unexpectedly raised")
 
         try:
             yield yieldpoints.WithTimeout(
-                timedelta(seconds=0.01), gen.Task(
-                    IOLoop.instance().add_timeout, timedelta(seconds=0.1)))
+                timedelta(seconds=0.01),
+                gen.Task(self.io_loop.add_timeout, timedelta(seconds=0.1)),
+                self.io_loop)
         except yieldpoints.TimeoutException:
             # Expected
             pass
         else:
             self.fail("No TimeoutException raised")
 
-        done()
 
-    def test_io_loop(self):
-        global_loop = IOLoop.instance()
-        custom_loop = IOLoop()
-        self.assertNotEqual(global_loop, custom_loop)
-
-        @gen.engine
-        def test():
-            yield gen.Callback('key')
-
-            try:
-                # This schedules a timeout on the custom loop
-                yield yieldpoints.WithTimeout(
-                    timedelta(seconds=0.01), 'key',
-                    io_loop=custom_loop)
-            except yieldpoints.TimeoutException:
-                # Expected
-                pass
-            else:
-                self.fail("No TimeoutException raised")
-
-            custom_loop.stop()
-
-        test()
-        custom_loop.start()
-
-
-class TestCancel(unittest.TestCase):
-    @async_test_engine()
-    def test_cancel(self, done):
+class TestCancel(AsyncTestCase):
+    @gen_test
+    def test_cancel(self):
         @gen.engine
         def test(callback):
             yield gen.Callback('key') # never called
@@ -207,11 +175,9 @@ class TestCancel(unittest.TestCase):
             pass
         except gen.LeakedCallbackError:
             self.fail("LeakedCallbackError was unexpectedly raised")
-        else:
-            done()
 
-    @async_test_engine()
-    def test_cancel_unknown_key(self, done):
+    @gen_test
+    def test_cancel_unknown_key(self):
         @gen.engine
         def test(callback):
             yield yieldpoints.Cancel('key')
@@ -221,22 +187,21 @@ class TestCancel(unittest.TestCase):
             yield gen.Task(test)
         except gen.UnknownKeyError:
             # Success
-            done()
+            pass
         else:
             self.fail("UnknownKeyError not raised")
 
-    @async_test_engine()
-    def test_callback_after_cancel(self, done):
+    @gen_test
+    def test_callback_after_cancel(self):
         # Check that a canceled callback can still be run without error
         key_callback = yield gen.Callback('key')
         yield yieldpoints.Cancel('key')
         key_callback()
-        done()
 
 
-class TestCancelAll(unittest.TestCase):
-    @async_test_engine()
-    def test_timeout(self, done):
+class TestCancelAll(AsyncTestCase):
+    @gen_test
+    def test_timeout(self):
         @gen.engine
         def test(callback):
             for i in range(2):
@@ -248,5 +213,3 @@ class TestCancelAll(unittest.TestCase):
             yield gen.Task(test)
         except gen.LeakedCallbackError:
             self.fail("LeakedCallbackError was unexpectedly raised")
-        else:
-            done()
